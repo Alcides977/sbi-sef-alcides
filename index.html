@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SBI SEF Alcides</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f2f2f2; }
+    h1 { text-align: center; }
+    .tabs { display: flex; justify-content: center; margin-bottom: 20px; }
+    .tabs button { padding: 10px 20px; margin: 0 10px; border: none; border-radius: 5px; background-color: #007BFF; color: white; cursor: pointer; }
+    .tabs button.active { background-color: #0056b3; }
+    .buscador { display: none; }
+    .buscador.active { display: block; }
+    input { padding: 10px; margin: 10px 0; width: 100%; max-width: 400px; border: 1px solid #ccc; border-radius: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #fff; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>SBI SEF Alcides</h1>
+
+  <div class="tabs">
+    <button onclick="mostrarBuscador('telefonos')" class="active">Teléfonos</button>
+    <button onclick="mostrarBuscador('direcciones')">Direcciones</button>
+  </div>
+
+  <div id="telefonos" class="buscador active">
+    <h2>SBI SEF Alcides Teléfonos</h2>
+    <input type="text" id="busquedaTelefonos" placeholder="Buscar por nombre, DNI o teléfono" onkeyup="filtrarTelefonos()">
+    <table>
+      <thead>
+        <tr>
+          <th>DNI</th>
+          <th>Nombre</th>
+          <th>Teléfono1</th>
+          <th>Teléfono2</th>
+          <th>Teléfono3</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-telefonos"></tbody>
+    </table>
+  </div>
+
+  <div id="direcciones" class="buscador">
+    <h2>SBI SEF Alcides Direcciones</h2>
+    <input type="text" id="busquedaDirecciones" placeholder="Buscar por nombre o DNI" onkeyup="filtrarDirecciones()">
+    <table>
+      <thead>
+        <tr>
+          <th>DNI</th>
+          <th>Nombre</th>
+          <th>Dirección</th>
+          <th>Distrito</th>
+          <th>Provincia</th>
+          <th>Departamento</th>
+          <th>Fuente</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-direcciones"></tbody>
+    </table>
+  </div>
+
+  <script>
+    function mostrarBuscador(id) {
+      document.querySelectorAll('.buscador').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.tabs button[onclick="mostrarBuscador('${id}')"]`).classList.add('active');
+    }
+
+    function cargarCSVTelefonos(url) {
+      fetch(url)
+        .then(response => response.text())
+        .then(data => {
+          const filas = data.split('\n').slice(1);
+          const datos = filas.map(linea => {
+            const [dni, nombre, telefono1, telefono2, telefono3] = linea.split(',');
+            return { dni, nombre, telefono1, telefono2, telefono3 };
+          });
+          window.datosTelefonos = datos;
+          mostrarTelefonos(datos);
+        });
+    }
+
+    function mostrarTelefonos(data) {
+      const tabla = document.getElementById("tabla-telefonos");
+      tabla.innerHTML = "";
+      data.forEach(c => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${c.dni}</td>
+            <td>${c.nombre}</td>
+            <td>${c.telefono1}</td>
+            <td>${c.telefono2}</td>
+            <td>${c.telefono3}</td>
+          </tr>`;
+      });
+    }
+
+    function filtrarTelefonos() {
+      const valor = document.getElementById("busquedaTelefonos").value.toLowerCase();
+      const filtrado = (window.datosTelefonos || []).filter(c =>
+        (c.nombre || '').toLowerCase().includes(valor) ||
+        (c.dni || '').includes(valor) ||
+        (c.telefono1 || '').includes(valor) ||
+        (c.telefono2 || '').includes(valor) ||
+        (c.telefono3 || '').includes(valor)
+      );
+      mostrarTelefonos(filtrado);
+    }
+
+    function cargarCSVDirecciones(url) {
+      fetch(url)
+        .then(response => response.text())
+        .then(data => {
+          const filas = data.split('\n').slice(1);
+          const datos = filas.map(linea => {
+            const [dni, nombre, direccion, distrito, provincia, departamento, fuente, fecha] = linea.split(',');
+            return { dni, nombre, direccion, distrito, provincia, departamento, fuente, fecha };
+          });
+          window.datosDirecciones = datos;
+          mostrarDirecciones(datos);
+        });
+    }
+
+    function mostrarDirecciones(data) {
+      const tabla = document.getElementById("tabla-direcciones");
+      tabla.innerHTML = "";
+      data.forEach(c => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${c.dni}</td>
+            <td>${c.nombre}</td>
+            <td>${c.direccion}</td>
+            <td>${c.distrito}</td>
+            <td>${c.provincia}</td>
+            <td>${c.departamento}</td>
+            <td>${c.fuente}</td>
+            <td>${c.fecha}</td>
+          </tr>`;
+      });
+    }
+
+    function filtrarDirecciones() {
+      const valor = document.getElementById("busquedaDirecciones").value.toLowerCase();
+      const filtrado = (window.datosDirecciones || []).filter(c =>
+        (c.nombre || '').toLowerCase().includes(valor) ||
+        (c.dni || '').includes(valor)
+      );
+      mostrarDirecciones(filtrado);
+    }
+
+    cargarCSVTelefonos("https://docs.google.com/spreadsheets/d/e/2PACX-1vTDJRXWaZ_1GdDaMGdQdaKIOtrOQxnahYWoHRenMem2kyQ2BqVVsN0VumwIIRJiXVwdyqLoWBxcTGUW/pub?gid=1200478868&single=true&output=csv");
+    cargarCSVDirecciones("https://docs.google.com/spreadsheets/d/e/2PACX-1vTDJRXWaZ_1GdDaMGdQdaKIOtrOQxnahYWoHRenMem2kyQ2BqVVsN0VumwIIRJiXVwdyqLoWBxcTGUW/pub?gid=1534098610&single=true&output=csv");
+  </script>
+</body>
+</html>
